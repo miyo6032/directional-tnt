@@ -15,12 +15,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ServerWorld.class)
-public class ServerWorldMixin {
+public abstract class ServerWorldMixin {
     @Inject(at = @At("HEAD"), method = "createExplosion", cancellable = true)
     private void onCreateExplosion(Entity entity, DamageSource damageSource, ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType, CallbackInfoReturnable<Explosion> cir) {
-        if (entity instanceof DirectionalTntEntity) {
+        if (entity instanceof DirectionalTntEntity directionalTntEntity) {
             ServerWorld world = (ServerWorld) (Object) this;
-            DirectionalExplosion explosion = new DirectionalExplosion(world, entity, damageSource, behavior, x, y, z, power, createFire, destructionType);
+            DirectionalExplosion explosion = new DirectionalExplosion(world, entity, damageSource, behavior, x, y, z, power, createFire, destructionType, directionalTntEntity.getDirection());
             explosion.collectBlocksAndDamageEntities();
             explosion.affectWorld(false);
             if (destructionType == Explosion.DestructionType.NONE) {

@@ -4,9 +4,9 @@
   "package": "net.barribob.directionaltnt.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-  ],
-  "client": [
-    "ServerWorldMixin"
+    "ExplosionMixin",
+    "ServerWorldMixin",
+    "TntBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,7 +1,56 @@
 {
   "variants": {
-    "": {
-      "model": "minecraft:block/tnt"
+    "facing=down,unstable=false": {
+      "x": 180,
+      "model": "directionaltnt:block/directional_tnt"
+    },
+    "facing=down,unstable=true": {
+      "x": 180,
+      "model": "directionaltnt:block/directional_tnt_open"
+    },
+    "facing=east,unstable=false": {
+      "x": 90,
+      "y": 90,
+      "model": "directionaltnt:block/directional_tnt"
+    },
+    "facing=east,unstable=true": {
+      "x": 90,
+      "y": 90,
+      "model": "directionaltnt:block/directional_tnt_open"
+    },
+    "facing=north,unstable=false": {
+      "x": 90,
+      "model": "directionaltnt:block/directional_tnt"
+    },
+    "facing=north,unstable=true": {
+      "x": 90,
+      "model": "directionaltnt:block/directional_tnt_open"
+    },
+    "facing=south,unstable=false": {
+      "x": 90,
+      "y": 180,
+      "model": "directionaltnt:block/directional_tnt"
+    },
+    "facing=south,unstable=true": {
+      "x": 90,
+      "y": 180,
+      "model": "directionaltnt:block/directional_tnt_open"
+    },
+    "facing=up,unstable=false": {
+      "model": "directionaltnt:block/directional_tnt"
+    },
+    "facing=up,unstable=true": {
+      "model": "directionaltnt:block/directional_tnt_open"
+    },
+    "facing=west,unstable=false": {
+      "x": 90,
+      "y": 270,
+      "model": "directionaltnt:block/directional_tnt"
+    },
+    "facing=west,unstable=true": {
+      "x": 90,
+      "y": 270,
+      "model": "directionaltnt:block/directional_tnt_open"
     }
   }
 }
