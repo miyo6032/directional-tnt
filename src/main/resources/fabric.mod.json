@@ -19,6 +19,9 @@
   "entrypoints": {
     "main": [
       "net.barribob.directionaltnt.DirectionalTnt"
+    ],
+    "client": [
+      "net.barribob.directionaltnt.DirectionalTntClient"
     ]
   },
   "mixins": [
