@@ -2,10 +2,7 @@ package net.barribob.directionaltnt.mixin;
 
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.barribob.directionaltnt.DirectionalExplosion;
-import net.barribob.directionaltnt.DirectionalTnt;
-import net.barribob.directionaltnt.DirectionalTntBlock;
-import net.barribob.directionaltnt.DirectionalTntEntity;
+import net.barribob.directionaltnt.*;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import net.minecraft.entity.Entity;
@@ -59,6 +56,8 @@ public abstract class ExplosionMixin {
 
     @Shadow public abstract void affectWorld(boolean particles);
 
+    @Shadow @Final private Random random;
+
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"), method = "affectWorld", locals = LocalCapture.CAPTURE_FAILSOFT)
     public void beforeBlockDestroy(boolean particles, CallbackInfo ci, boolean b1, ObjectArrayList objectArrayList, Iterator var4, BlockPos blockPos, BlockState blockState) {
         Explosion explosion = (Explosion) (Object) this;
@@ -75,15 +74,13 @@ public abstract class ExplosionMixin {
         Explosion explosion = (Explosion) (Object) this;
 
         if(particles && explosion instanceof DirectionalExplosion directionalExplosion) {
-            boolean bl = destructionType != Explosion.DestructionType.NONE;
             Direction direction = directionalExplosion.getDirection();
-            double offX = direction.getOffsetX() * 4;
-            double offY = direction.getOffsetY() * 4;
-            double offZ = direction.getOffsetZ() * 4;
-            if (!(this.power < 2.0F) && bl) {
-                this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.x + offX, this.y + offY, this.z + offZ, 1.0D, 0.0D, 0.0D);
-            } else {
-                this.world.addParticle(ParticleTypes.EXPLOSION, this.x + offX, this.y + offY, this.z + offZ, 1.0D, 0.0D, 0.0D);
+            double offX = direction.getOffsetX();
+            double offY = direction.getOffsetY();
+            double offZ = direction.getOffsetZ();
+            this.world.addParticle(DirectionalTntClient.DIRECTIONAL_EXPLOSION_PARTICLE, this.x, this.y, this.z, offX, offY, offZ);
+            for(int i = 0; i < 10; i++) {
+                this.world.addParticle(ParticleTypes.CLOUD, this.x, this.y, this.z, (offX + random.nextGaussian() * 0.5) * 0.5, (offY + random.nextGaussian() * 0.5) * 0.5, (offZ + random.nextGaussian() * 0.5) * 0.5);
             }
             affectWorld(false);
             ci.cancel();
