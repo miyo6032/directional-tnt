@@ -40,7 +40,7 @@ public class DirectionalTntBlock extends TntBlock {
     }
 
     public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return this.getDefaultState().with(FACING, ctx.getPlayerLookDirection().getOpposite());
+        return this.getDefaultState().with(FACING, ctx.getPlayerLookDirection());
     }
 
     static {

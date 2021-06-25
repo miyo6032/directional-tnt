@@ -81,9 +81,9 @@ public abstract class ExplosionMixin {
             double offY = direction.getOffsetY() * 4;
             double offZ = direction.getOffsetZ() * 4;
             if (!(this.power < 2.0F) && bl) {
-                this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.x - offX, this.y - offY, this.z - offZ, 1.0D, 0.0D, 0.0D);
+                this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.x + offX, this.y + offY, this.z + offZ, 1.0D, 0.0D, 0.0D);
             } else {
-                this.world.addParticle(ParticleTypes.EXPLOSION, this.x - offX, this.y - offY, this.z - offZ, 1.0D, 0.0D, 0.0D);
+                this.world.addParticle(ParticleTypes.EXPLOSION, this.x + offX, this.y + offY, this.z + offZ, 1.0D, 0.0D, 0.0D);
             }
             affectWorld(false);
             ci.cancel();

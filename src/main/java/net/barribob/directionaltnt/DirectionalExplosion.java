@@ -30,7 +30,7 @@ public class DirectionalExplosion extends Explosion {
     }
 
     public static float calculatePower(Direction direction, double d, double e, double f, float power, World world) {
-        float dot = Math.max((float) (d * direction.getOffsetX() + e * direction.getOffsetY() + f * direction.getOffsetZ()) * -1, 0);
+        float dot = Math.max((float) (d * direction.getOffsetX() + e * direction.getOffsetY() + f * direction.getOffsetZ()), 0);
         return power * (0.8F + world.random.nextFloat() * 0.4F) * dot * dot * 4;
     }
 
@@ -55,7 +55,7 @@ public class DirectionalExplosion extends Explosion {
                         Vec3d vec3d = new Vec3d(n + g, o, p + h);
                         if (entity.world.raycast(new RaycastContext(vec3d, source, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity)).getType() == HitResult.Type.MISS) {
                             // Changed to factor in direction
-                            double dot = Math.max(source.subtract(vec3d).normalize().dotProduct(dir), 0);
+                            double dot = Math.max(vec3d.subtract(source).normalize().dotProduct(dir), 0);
                             i += dot * dot;
                             // End change
                         }
