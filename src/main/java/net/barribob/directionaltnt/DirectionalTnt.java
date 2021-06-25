@@ -16,6 +16,8 @@ import net.minecraft.util.registry.Registry;
 
 public class DirectionalTnt implements ModInitializer {
 	private static final Identifier tntId = new Identifier("directionaltnt", "directional_tnt");
+	public static final Identifier explosionNetworkId = new Identifier("directionaltnt", "directional_explosion");
+
     public static final Block DIRECTIONAL_TNT = new DirectionalTntBlock(FabricBlockSettings.copy(Blocks.TNT));
     public static final EntityType<DirectionalTntEntity> DIRECTIONAL_TNT_ENTITY = Registry.register(Registry.ENTITY_TYPE, tntId,
             FabricEntityTypeBuilder.create(SpawnGroup.MISC, (EntityType.EntityFactory<DirectionalTntEntity>) DirectionalTntEntity::new)

@@ -1,13 +1,26 @@
 package net.barribob.directionaltnt.mixin;
 
+import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.barribob.directionaltnt.DirectionalExplosion;
 import net.barribob.directionaltnt.DirectionalTnt;
 import net.barribob.directionaltnt.DirectionalTntBlock;
 import net.barribob.directionaltnt.DirectionalTntEntity;
 import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.enchantment.ProtectionEnchantment;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.TntEntity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.util.math.*;
 import net.minecraft.world.World;
+import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.explosion.Explosion;
+import net.minecraft.world.explosion.ExplosionBehavior;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,13 +29,35 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import java.util.Iterator;
+import java.util.*;
 
 @Mixin(Explosion.class)
 public abstract class ExplosionMixin {
     @Shadow
     @Final
     private World world;
+
+    @Shadow @Final @Nullable private Entity entity;
+
+    @Shadow @Final private float power;
+
+    @Shadow @Final private double x;
+
+    @Shadow @Final private double y;
+
+    @Shadow @Final private double z;
+
+    @Shadow @Final private ExplosionBehavior behavior;
+
+    @Shadow @Final private List<BlockPos> affectedBlocks;
+
+    @Shadow public abstract DamageSource getDamageSource();
+
+    @Shadow @Final private Map<PlayerEntity, Vec3d> affectedPlayers;
+
+    @Shadow @Final private Explosion.DestructionType destructionType;
+
+    @Shadow public abstract void affectWorld(boolean particles);
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"), method = "affectWorld", locals = LocalCapture.CAPTURE_FAILSOFT)
     public void beforeBlockDestroy(boolean particles, CallbackInfo ci, boolean b1, ObjectArrayList objectArrayList, Iterator var4, BlockPos blockPos, BlockState blockState) {
@@ -32,6 +67,131 @@ public abstract class ExplosionMixin {
             int i = tntEntity.getFuse();
             tntEntity.setFuse((short) (world.random.nextInt(i / 4) + i / 8));
             world.spawnEntity(tntEntity);
+        }
+    }
+
+    @Inject(at = @At(value = "HEAD"), method = "affectWorld", cancellable = true)
+    public void onAffectWorld(boolean particles, CallbackInfo ci) {
+        Explosion explosion = (Explosion) (Object) this;
+
+        if(particles && explosion instanceof DirectionalExplosion directionalExplosion) {
+            boolean bl = destructionType != Explosion.DestructionType.NONE;
+            Direction direction = directionalExplosion.getDirection();
+            double offX = direction.getOffsetX() * 4;
+            double offY = direction.getOffsetY() * 4;
+            double offZ = direction.getOffsetZ() * 4;
+            if (!(this.power < 2.0F) && bl) {
+                this.world.addParticle(ParticleTypes.EXPLOSION_EMITTER, this.x - offX, this.y - offY, this.z - offZ, 1.0D, 0.0D, 0.0D);
+            } else {
+                this.world.addParticle(ParticleTypes.EXPLOSION, this.x - offX, this.y - offY, this.z - offZ, 1.0D, 0.0D, 0.0D);
+            }
+            affectWorld(false);
+            ci.cancel();
+        }
+    }
+
+    @Inject(at = @At(value = "HEAD"), method = "collectBlocksAndDamageEntities", cancellable = true)
+    public void onCollectBlocksAndDamageEntities(CallbackInfo ci){
+        Explosion explosion = (Explosion) (Object) this;
+
+        if(explosion instanceof DirectionalExplosion directionalExplosion) {
+            doDirectionalExplosion(explosion, directionalExplosion);
+            ci.cancel();
+        }
+    }
+
+    private void doDirectionalExplosion(Explosion explosion, DirectionalExplosion directionalExplosion) {
+        this.world.emitGameEvent(entity, GameEvent.EXPLODE, new BlockPos(this.x, this.y, this.z));
+        Set<BlockPos> set = Sets.newHashSet();
+        Direction direction = directionalExplosion.getDirection();
+        int k;
+        int l;
+        for(int j = 0; j < 16; ++j) {
+            for(k = 0; k < 16; ++k) {
+                for(l = 0; l < 16; ++l) {
+                    if (j == 0 || j == 15 || k == 0 || k == 15 || l == 0 || l == 15) {
+                        double d = (float)j / 15.0F * 2.0F - 1.0F;
+                        double e = (float)k / 15.0F * 2.0F - 1.0F;
+                        double f = (float)l / 15.0F * 2.0F - 1.0F;
+                        double g = Math.sqrt(d * d + e * e + f * f);
+                        d /= g;
+                        e /= g;
+                        f /= g;
+
+                        // Added for direction
+                        float h = DirectionalExplosion.calculatePower(direction, d, e, f, power, world);
+                        // End added for direction
+
+                        double m = x;
+                        double n = y;
+                        double o = z;
+
+                        for(; h > 0.0F; h -= 0.22500001F) {
+                            BlockPos blockPos = new BlockPos(m, n, o);
+                            BlockState blockState = this.world.getBlockState(blockPos);
+                            FluidState fluidState = this.world.getFluidState(blockPos);
+                            if (!this.world.isInBuildLimit(blockPos)) {
+                                break;
+                            }
+
+                            Optional<Float> optional = behavior.getBlastResistance(explosion, this.world, blockPos, blockState, fluidState);
+                            if (optional.isPresent()) {
+                                h -= (optional.get() + 0.3F) * 0.3F;
+                            }
+
+                            if (h > 0.0F && this.behavior.canDestroyBlock(explosion, this.world, blockPos, blockState, h)) {
+                                set.add(blockPos);
+                            }
+
+                            m += d * 0.30000001192092896D;
+                            n += e * 0.30000001192092896D;
+                            o += f * 0.30000001192092896D;
+                        }
+                    }
+                }
+            }
+        }
+
+        affectedBlocks.addAll(set);
+        float q = this.power * 2.0F;
+        k = MathHelper.floor(this.x - (double)q - 1.0D);
+        l = MathHelper.floor(this.x + (double)q + 1.0D);
+        int t = MathHelper.floor(this.y - (double)q - 1.0D);
+        int u = MathHelper.floor(this.y + (double)q + 1.0D);
+        int v = MathHelper.floor(this.z - (double)q - 1.0D);
+        int w = MathHelper.floor(this.z + (double)q + 1.0D);
+        List<Entity> list = this.world.getOtherEntities(this.entity, new Box(k, t, v, l, u, w));
+        Vec3d vec3d = new Vec3d(this.x, this.y, this.z);
+
+        for (Entity entity : list) {
+            if (!entity.isImmuneToExplosion()) {
+                double y = Math.sqrt(entity.squaredDistanceTo(vec3d)) / (double) q;
+                if (y <= 1.0D) {
+                    double z = entity.getX() - this.x;
+                    double aa = (entity instanceof TntEntity ? entity.getY() : entity.getEyeY()) - this.y;
+                    double ab = entity.getZ() - this.z;
+                    double ac = Math.sqrt(z * z + aa * aa + ab * ab);
+                    if (ac != 0.0D) {
+                        z /= ac;
+                        aa /= ac;
+                        ab /= ac;
+                        double ad = DirectionalExplosion.getExposure(vec3d, entity, direction); // Changed to use direction
+                        double ae = (1.0D - y) * ad;
+                        entity.damage(getDamageSource(), (float) ((int) ((ae * ae + ae) / 2.0D * 7.0D * (double) q + 1.0D)));
+                        double af = ae;
+                        if (entity instanceof LivingEntity) {
+                            af = ProtectionEnchantment.transformExplosionKnockback((LivingEntity) entity, ae);
+                        }
+
+                        entity.setVelocity(entity.getVelocity().add(z * af, aa * af, ab * af));
+                        if (entity instanceof PlayerEntity playerEntity) {
+                            if (!playerEntity.isSpectator() && (!playerEntity.isCreative() || !playerEntity.getAbilities().flying)) {
+                                affectedPlayers.put(playerEntity, new Vec3d(z * ae, aa * ae, ab * ae));
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,9 +1,13 @@
 package net.barribob.directionaltnt.mixin;
 
 import net.barribob.directionaltnt.DirectionalExplosion;
+import net.barribob.directionaltnt.DirectionalTnt;
 import net.barribob.directionaltnt.DirectionalTntEntity;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -29,7 +33,10 @@ public abstract class ServerWorldMixin {
 
             for (ServerPlayerEntity serverPlayerEntity : world.getPlayers()) {
                 if (serverPlayerEntity.squaredDistanceTo(x, y, z) < 4096.0D) {
-                    serverPlayerEntity.networkHandler.sendPacket(new ExplosionS2CPacket(x, y, z, power, explosion.getAffectedBlocks(), explosion.getAffectedPlayers().get(serverPlayerEntity)));
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    new ExplosionS2CPacket(x, y, z, power, explosion.getAffectedBlocks(), explosion.getAffectedPlayers().get(serverPlayerEntity)).write(buf);
+                    buf.writeInt(directionalTntEntity.getDirection().getId());
+                    ServerPlayNetworking.send(serverPlayerEntity, DirectionalTnt.explosionNetworkId, buf);
                 }
             }
 
