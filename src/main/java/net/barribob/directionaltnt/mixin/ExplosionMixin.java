@@ -101,15 +101,23 @@ public abstract class ExplosionMixin {
         this.world.emitGameEvent(entity, GameEvent.EXPLODE, new BlockPos(this.x, this.y, this.z));
         Set<BlockPos> set = Sets.newHashSet();
         Direction direction = directionalExplosion.getDirection();
+        int boxSize = 24;
+        int boxMaxX = boxSize + Math.min(0, direction.getOffsetX() * 12);
+        int boxMaxY = boxSize + Math.min(0, direction.getOffsetY() * 12);
+        int boxMaxZ = boxSize + Math.min(0, direction.getOffsetZ() * 12);
+        int boxMinX = Math.max(0, direction.getOffsetX() * 12);
+        int boxMinY = Math.max(0, direction.getOffsetY() * 12);
+        int boxMinZ = Math.max(0, direction.getOffsetZ() * 12);
+        float boxMax = boxSize - 1;
         int k;
         int l;
-        for(int j = 0; j < 16; ++j) {
-            for(k = 0; k < 16; ++k) {
-                for(l = 0; l < 16; ++l) {
-                    if (j == 0 || j == 15 || k == 0 || k == 15 || l == 0 || l == 15) {
-                        double d = (float)j / 15.0F * 2.0F - 1.0F;
-                        double e = (float)k / 15.0F * 2.0F - 1.0F;
-                        double f = (float)l / 15.0F * 2.0F - 1.0F;
+        for(int j = boxMinX; j < boxMaxX; ++j) {
+            for(k = boxMinY; k < boxMaxY; ++k) {
+                for(l = boxMinZ; l < boxMaxZ; ++l) {
+                    if (j == 0 || j == boxMax || k == 0 || k == boxMax || l == 0 || l == boxMax) {
+                        double d = (float)j / boxMax * 2.0F - 1.0F;
+                        double e = (float)k / boxMax * 2.0F - 1.0F;
+                        double f = (float)l / boxMax * 2.0F - 1.0F;
                         double g = Math.sqrt(d * d + e * e + f * f);
                         d /= g;
                         e /= g;
@@ -162,28 +170,30 @@ public abstract class ExplosionMixin {
 
         for (Entity entity : list) {
             if (!entity.isImmuneToExplosion()) {
-                double y = Math.sqrt(entity.squaredDistanceTo(vec3d)) / (double) q;
-                if (y <= 1.0D) {
-                    double z = entity.getX() - this.x;
+                double distance = Math.sqrt(entity.squaredDistanceTo(vec3d)) / (double) q;
+                if (distance <= 1.0D) {
+                    double x1 = entity.getX() - this.x;
                     double aa = (entity instanceof TntEntity ? entity.getY() : entity.getEyeY()) - this.y;
                     double ab = entity.getZ() - this.z;
-                    double ac = Math.sqrt(z * z + aa * aa + ab * ab);
+                    double ac = Math.sqrt(x1 * x1 + aa * aa + ab * ab);
                     if (ac != 0.0D) {
-                        z /= ac;
+                        x1 /= ac;
                         aa /= ac;
                         ab /= ac;
                         double ad = DirectionalExplosion.getExposure(vec3d, entity, direction); // Changed to use direction
-                        double ae = (1.0D - y) * ad;
-                        entity.damage(getDamageSource(), (float) ((int) ((ae * ae + ae) / 2.0D * 7.0D * (double) q + 1.0D)));
-                        double af = ae;
-                        if (entity instanceof LivingEntity) {
-                            af = ProtectionEnchantment.transformExplosionKnockback((LivingEntity) entity, ae);
-                        }
+                        if(ad > 0) {
+                            double ae = (1.0D - distance) * ad;
+                            entity.damage(getDamageSource(), (float) ((int) ((ae * ae + ae) / 2.0D * 7.0D * (double) q + 1.0D)));
+                            double af = ae;
+                            if (entity instanceof LivingEntity) {
+                                af = ProtectionEnchantment.transformExplosionKnockback((LivingEntity) entity, ae);
+                            }
 
-                        entity.setVelocity(entity.getVelocity().add(z * af, aa * af, ab * af));
-                        if (entity instanceof PlayerEntity playerEntity) {
-                            if (!playerEntity.isSpectator() && (!playerEntity.isCreative() || !playerEntity.getAbilities().flying)) {
-                                affectedPlayers.put(playerEntity, new Vec3d(z * ae, aa * ae, ab * ae));
+                            entity.setVelocity(entity.getVelocity().add(x1 * af, aa * af, ab * af));
+                            if (entity instanceof PlayerEntity playerEntity) {
+                                if (!playerEntity.isSpectator() && (!playerEntity.isCreative() || !playerEntity.getAbilities().flying)) {
+                                    affectedPlayers.put(playerEntity, new Vec3d(x1 * ae, aa * ae, ab * ae));
+                                }
                             }
                         }
                     }

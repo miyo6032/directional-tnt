@@ -16,12 +16,12 @@ public class DirectionalExplosion extends Explosion {
     private Direction direction;
 
     public DirectionalExplosion(World world, @Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionBehavior behavior, double x, double y, double z, float power, boolean createFire, DestructionType destructionType, Direction direction) {
-        super(world, entity, damageSource, behavior, x, y, z, power, createFire, destructionType);
+        super(world, entity, damageSource, behavior, x, y, z, power * 3, createFire, destructionType);
         this.direction = direction;
     }
 
     public DirectionalExplosion(World world, @Nullable Entity entity, double x, double y, double z, float power, List<BlockPos> affectedBlocks, Direction direction) {
-        super(world, entity, x, y, z, power, affectedBlocks);
+        super(world, entity, x, y, z, power * 3, affectedBlocks);
         this.direction = direction;
     }
 
@@ -31,7 +31,7 @@ public class DirectionalExplosion extends Explosion {
 
     public static float calculatePower(Direction direction, double d, double e, double f, float power, World world) {
         float dot = Math.max((float) (d * direction.getOffsetX() + e * direction.getOffsetY() + f * direction.getOffsetZ()), 0);
-        return power * (0.8F + world.random.nextFloat() * 0.4F) * dot * dot * 4;
+        return power * (0.8F + world.random.nextFloat() * 0.4F) * dot * dot;
     }
 
     public static float getExposure(Vec3d source, Entity entity, Direction direction) {
@@ -65,7 +65,7 @@ public class DirectionalExplosion extends Explosion {
                 }
             }
 
-            return i / (float)j;
+            return Math.round(i) / (float)j;
         } else {
             return 0.0F;
         }
