@@ -8,6 +8,9 @@
     "ServerWorldMixin",
     "TntBlockMixin"
   ],
+  "client": [
+    "ExplosionMixinClient"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

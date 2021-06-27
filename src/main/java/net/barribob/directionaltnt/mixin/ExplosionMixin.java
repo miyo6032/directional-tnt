@@ -2,7 +2,10 @@ package net.barribob.directionaltnt.mixin;
 
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.barribob.directionaltnt.*;
+import net.barribob.directionaltnt.DirectionalExplosion;
+import net.barribob.directionaltnt.DirectionalTnt;
+import net.barribob.directionaltnt.DirectionalTntBlock;
+import net.barribob.directionaltnt.DirectionalTntEntity;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.ProtectionEnchantment;
 import net.minecraft.entity.Entity;
@@ -11,7 +14,6 @@ import net.minecraft.entity.TntEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
@@ -52,12 +54,6 @@ public abstract class ExplosionMixin {
 
     @Shadow @Final private Map<PlayerEntity, Vec3d> affectedPlayers;
 
-    @Shadow @Final private Explosion.DestructionType destructionType;
-
-    @Shadow public abstract void affectWorld(boolean particles);
-
-    @Shadow @Final private Random random;
-
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"), method = "affectWorld", locals = LocalCapture.CAPTURE_FAILSOFT)
     public void beforeBlockDestroy(boolean particles, CallbackInfo ci, boolean b1, ObjectArrayList objectArrayList, Iterator var4, BlockPos blockPos, BlockState blockState) {
         Explosion explosion = (Explosion) (Object) this;
@@ -66,24 +62,6 @@ public abstract class ExplosionMixin {
             int i = tntEntity.getFuse();
             tntEntity.setFuse((short) (world.random.nextInt(i / 4) + i / 8));
             world.spawnEntity(tntEntity);
-        }
-    }
-
-    @Inject(at = @At(value = "HEAD"), method = "affectWorld", cancellable = true)
-    public void onAffectWorld(boolean particles, CallbackInfo ci) {
-        Explosion explosion = (Explosion) (Object) this;
-
-        if(particles && explosion instanceof DirectionalExplosion directionalExplosion) {
-            Direction direction = directionalExplosion.getDirection();
-            double offX = direction.getOffsetX();
-            double offY = direction.getOffsetY();
-            double offZ = direction.getOffsetZ();
-            this.world.addParticle(DirectionalTntClient.DIRECTIONAL_EXPLOSION_PARTICLE, this.x, this.y, this.z, offX, offY, offZ);
-            for(int i = 0; i < 10; i++) {
-                this.world.addParticle(ParticleTypes.CLOUD, this.x, this.y, this.z, (offX + random.nextGaussian() * 0.5) * 0.5, (offY + random.nextGaussian() * 0.5) * 0.5, (offZ + random.nextGaussian() * 0.5) * 0.5);
-            }
-            affectWorld(false);
-            ci.cancel();
         }
     }
 
