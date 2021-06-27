@@ -9,11 +9,11 @@
     "Barribob"
   ],
   "contact": {
-
+    "sources": "https://github.com/miyo6032/directional-tnt"
   },
 
-  "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "license": "MIT",
+  "icon": "assets/directionaltnt/textures/block/directional_tnt_side.png",
 
   "environment": "*",
   "entrypoints": {

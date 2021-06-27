@@ -1,9 +1,3 @@
-# Fabric Example Mod
+# Directional Tnt
 
-## Setup
-
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
-
-## License
-
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+Adds a new type of tnt that explodes in the direction it was placed

@@ -119,7 +119,7 @@ public abstract class ExplosionMixin {
 
                             Optional<Float> optional = behavior.getBlastResistance(explosion, this.world, blockPos, blockState, fluidState);
                             if (optional.isPresent()) {
-                                h -= (optional.get() + 0.3F) * 0.3F;
+                                h -= (optional.get() + 0.3F) * 0.225F; // Changed multiplier from 0.3 to 0.225
                             }
 
                             if (h > 0.0F && this.behavior.canDestroyBlock(explosion, this.world, blockPos, blockState, h)) {

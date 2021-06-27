@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "T",
+    "T",
+    "O"
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:tnt"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "result": {
+    "item": "directionaltnt:directional_tnt",
+    "count": 2
+  }
+}
